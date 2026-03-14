@@ -2,77 +2,164 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amanat Notes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tanotes Modern</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Используем переменные темы Telegram */
+        :root {
+            --bg-color: #0d1117;
+            --glass-bg: rgba(23, 28, 36, 0.8);
+            --accent-color: #58a6ff;
+            --text-main: #adbac7;
+            --text-bright: #ffffff;
+            --danger: #f85149;
+        }
+
         body {
-            background-color: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            font-family: sans-serif;
-            margin: 0; padding: 20px;
-            display: flex; flex-direction: column; gap: 15px;
+            background: var(--bg-color);
+            background-image: radial-gradient(circle at top right, #161b22, #0d1117);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0; padding: 0; overflow: hidden; height: 100vh;
         }
-        .input-field {
-            background: var(--tg-theme-secondary-bg-color);
-            border: 1px solid var(--tg-theme-hint-color);
-            color: var(--tg-theme-text-color);
-            padding: 12px; border-radius: 10px; font-size: 16px;
+
+        /* Контейнер страниц */
+        .page {
+            display: none;
+            padding: 20px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
         }
-        button {
-            background-color: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            border: none; padding: 15px; border-radius: 10px;
-            font-weight: bold; cursor: pointer;
+        .page.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { color: var(--text-bright); font-weight: 600; margin-bottom: 20px; }
+
+        /* Карточки заметок */
+        .note-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 16px; margin-bottom: 12px;
+            position: relative;
         }
-        select {
-            background: var(--tg-theme-secondary-bg-color);
-            color: var(--tg-theme-text-color);
-            padding: 10px; border-radius: 8px;
+        .note-card .cat-badge {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--accent-color); margin-bottom: 5px; display: block;
         }
+
+        /* Поля ввода */
+        .input-group { display: flex; flex-direction: column; gap: 15px; }
+        input, textarea, select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 12px;
+            color: var(--text-bright); font-size: 16px; outline: none;
+        }
+        input:focus { border-color: var(--accent-color); }
+
+        /* Кнопки */
+        .main-btn {
+            background: var(--accent-color);
+            color: white; border: none; padding: 15px;
+            border-radius: 12px; font-weight: bold; font-size: 16px;
+            box-shadow: 0 4px 15px rgba(88, 166, 255, 0.3);
+        }
+
+        /* Навигация */
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%;
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            display: flex; justify-content: space-around;
+            padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-item {
+            text-align: center; color: var(--text-main);
+            font-size: 12px; text-decoration: none; cursor: pointer;
+        }
+        .nav-item.active { color: var(--accent-color); }
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
     </style>
 </head>
 <body>
-    <h2>📝 Новая заметка</h2>
-    
-    <label>Категория:</label>
-    <select id="category" class="input-field">
-        <option value="Работа">💼 Работа</option>
-        <option value="Личное">🏠 Личное</option>
-        <option value="Идеи">💡 Идеи</option>
-        <option value="Астрономия">🌌 Астрономия</option>
-    </select>
 
-    <label>Текст заметки:</label>
-    <textarea id="noteText" class="input-field" rows="5" placeholder="Напиши что-нибудь..."></textarea>
+    <div id="page-list" class="page active">
+        <h2>Мои заметки</h2>
+        <div id="notes-container">
+            <div class="note-card">
+                <span class="cat-badge">Астрономия</span>
+                <div>Настроить гидирование на телескопе 🔭</div>
+            </div>
+            </div>
+    </div>
 
-    <button id="sendBtn">Сохранить заметку</button>
+    <div id="page-add" class="page">
+        <h2>Новая запись</h2>
+        <div class="input-group">
+            <select id="note-category">
+                <option value="💡 Идеи">💡 Идеи</option>
+                <option value="💼 Работа">💼 Работа</option>
+                <option value="🌌 Астрономия">🌌 Астрономия</option>
+                <option value="🏠 Личное">🏠 Личное</option>
+            </select>
+            <textarea id="note-text" rows="6" placeholder="О чем думаешь, Аманат?"></textarea>
+            <button class="main-btn" onclick="sendNote()">Сохранить в Tanotes</button>
+        </div>
+    </div>
+
+    <div id="page-cats" class="page">
+        <h2>Категории</h2>
+        <div class="note-card">💼 Работа (5)</div>
+        <div class="note-card">🌌 Астрономия (2)</div>
+    </div>
+
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="showPage('page-list', this)">
+            <span class="nav-icon">📁</span>Заметки
+        </div>
+        <div class="nav-item" onclick="showPage('page-add', this)">
+            <span class="nav-icon">➕</span>Добавить
+        </div>
+        <div class="nav-item" onclick="showPage('page-cats', this)">
+            <span class="nav-icon">📊</span>Темы
+        </div>
+    </nav>
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачиваем на все окно
+        tg.expand();
+        tg.headerColor = '#0d1117';
 
-        let btn = document.getElementById("sendBtn");
+        function showPage(pageId, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            el.classList.add('active');
+            tg.HapticFeedback.impactOccurred('light');
+        }
 
-        btn.addEventListener("click", () => {
-            let cat = document.getElementById("category").value;
-            let txt = document.getElementById("noteText").value;
+        function sendNote() {
+            const cat = document.getElementById('note-category').value;
+            const txt = document.getElementById('note-text').value;
 
-            if (txt.length < 2) {
-                tg.showAlert("Заметка слишком короткая!");
+            if (!txt) {
+                tg.MainButton.setText("Напиши хоть что-нибудь!").show();
+                setTimeout(() => tg.MainButton.hide(), 2000);
                 return;
             }
 
-            // Формируем данные для отправки боту
-            let data = {
-                category: cat,
-                text: txt
-            };
-
-            // Важный момент: через эту функцию данные улетают в Python
+            const data = { category: cat, text: txt };
             tg.sendData(JSON.stringify(data));
-        });
+            
+            // ВАЖНО: Мы больше НЕ закрываем окно! 
+            // Вместо этого очищаем поле и показываем успех
+            document.getElementById('note-text').value = '';
+            tg.HapticFeedback.notificationOccurred('success');
+            showPage('page-list', document.querySelector('.nav-item'));
+        }
     </script>
 </body>
 </html>
