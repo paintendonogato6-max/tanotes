@@ -7,159 +7,161 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #0d1117;
-            --glass-bg: rgba(23, 28, 36, 0.8);
-            --accent-color: #58a6ff;
-            --text-main: #adbac7;
-            --text-bright: #ffffff;
-            --danger: #f85149;
+            --bg: #0b0e14;
+            --accent: #7aa2f7;
+            --glass: rgba(26, 27, 38, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #c0caf5;
         }
 
         body {
-            background: var(--bg-color);
-            background-image: radial-gradient(circle at top right, #161b22, #0d1117);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0; padding: 0; overflow: hidden; height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, system-ui, sans-serif;
+            margin: 0; padding: 0;
+            overflow: hidden; height: 100vh;
         }
 
-        /* Контейнер страниц */
         .page {
             display: none;
             padding: 20px;
-            height: calc(100vh - 120px);
+            height: calc(100vh - 100px);
             overflow-y: auto;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.3s ease-out;
         }
-        .page.active { display: block; }
+        .active { display: block; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        h2 { color: var(--text-bright); font-weight: 600; margin-bottom: 20px; }
+        h2 { font-weight: 300; letter-spacing: 1px; color: #fff; margin-bottom: 25px; }
 
-        /* Карточки заметок */
-        .note-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px; border-radius: 16px; margin-bottom: 12px;
+        .note {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             position: relative;
         }
-        .note-card .cat-badge {
-            font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
-            color: var(--accent-color); margin-bottom: 5px; display: block;
+        .note .cat { font-size: 10px; color: var(--accent); font-weight: bold; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .note .time { font-size: 9px; opacity: 0.4; display: block; margin-top: 10px; }
+
+        .glass-input {
+            width: 100%; background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 14px; color: #fff;
+            padding: 14px; margin-bottom: 15px; font-size: 16px;
+            box-sizing: border-box; outline: none;
+        }
+        .glass-input:focus { border-color: var(--accent); }
+
+        .save-btn {
+            background: var(--accent); color: var(--bg);
+            border: none; width: 100%; padding: 16px;
+            border-radius: 14px; font-weight: bold; font-size: 16px;
         }
 
-        /* Поля ввода */
-        .input-group { display: flex; flex-direction: column; gap: 15px; }
-        input, textarea, select {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; padding: 12px;
-            color: var(--text-bright); font-size: 16px; outline: none;
-        }
-        input:focus { border-color: var(--accent-color); }
-
-        /* Кнопки */
-        .main-btn {
-            background: var(--accent-color);
-            color: white; border: none; padding: 15px;
-            border-radius: 12px; font-weight: bold; font-size: 16px;
-            box-shadow: 0 4px 15px rgba(88, 166, 255, 0.3);
-        }
-
-        /* Навигация */
-        .nav-bar {
+        .nav {
             position: fixed; bottom: 0; width: 100%;
-            background: var(--glass-bg); backdrop-filter: blur(20px);
+            background: rgba(16, 18, 26, 0.8); backdrop-filter: blur(20px);
             display: flex; justify-content: space-around;
-            padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 15px 0; border-top: 1px solid var(--border);
         }
-        .nav-item {
-            text-align: center; color: var(--text-main);
-            font-size: 12px; text-decoration: none; cursor: pointer;
-        }
-        .nav-item.active { color: var(--accent-color); }
-        .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+        .nav-btn { text-align: center; font-size: 11px; opacity: 0.5; transition: 0.3s; cursor: pointer; }
+        .nav-btn.active { opacity: 1; color: var(--accent); }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
 
+        .del-btn { color: #f7768e; float: right; font-size: 12px; cursor: pointer; padding: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="page-list" class="page active">
-        <h2>Мои заметки</h2>
-        <div id="notes-container">
-            <div class="note-card">
-                <span class="cat-badge">Астрономия</span>
-                <div>Настроить гидирование на телескопе 🔭</div>
-            </div>
-            </div>
+    <div id="p-list" class="page active">
+        <h2>Архив записей</h2>
+        <div id="list-container"></div>
     </div>
 
-    <div id="page-add" class="page">
-        <h2>Новая запись</h2>
-        <div class="input-group">
-            <select id="note-category">
-                <option value="💡 Идеи">💡 Идеи</option>
-                <option value="💼 Работа">💼 Работа</option>
-                <option value="🌌 Астрономия">🌌 Астрономия</option>
-                <option value="🏠 Личное">🏠 Личное</option>
-            </select>
-            <textarea id="note-text" rows="6" placeholder="О чем думаешь, Аманат?"></textarea>
-            <button class="main-btn" onclick="sendNote()">Сохранить в Tanotes</button>
-        </div>
+    <div id="p-add" class="page">
+        <h2>Новая заметка</h2>
+        <select id="i-cat" class="glass-input">
+            <option>💼 Работа</option>
+            <option>🌌 Астрономия</option>
+            <option>💡 Идеи</option>
+            <option>🏠 Личное</option>
+        </select>
+        <textarea id="i-text" class="glass-input" rows="8" placeholder="О чем думаешь?"></textarea>
+        <button class="save-btn" onclick="saveNote()">Сохранить</button>
     </div>
 
-    <div id="page-cats" class="page">
-        <h2>Категории</h2>
-        <div class="note-card">💼 Работа (5)</div>
-        <div class="note-card">🌌 Астрономия (2)</div>
-    </div>
-
-    <nav class="nav-bar">
-        <div class="nav-item active" onclick="showPage('page-list', this)">
+    <nav class="nav">
+        <div class="nav-btn active" onclick="show('p-list', this)">
             <span class="nav-icon">📁</span>Заметки
         </div>
-        <div class="nav-item" onclick="showPage('page-add', this)">
+        <div class="nav-btn" onclick="show('p-add', this)">
             <span class="nav-icon">➕</span>Добавить
-        </div>
-        <div class="nav-item" onclick="showPage('page-cats', this)">
-            <span class="nav-icon">📊</span>Темы
         </div>
     </nav>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        tg.headerColor = '#0d1117';
 
-        function showPage(pageId, el) {
+        // ТВОЯ АКТУАЛЬНАЯ ССЫЛКА NGROK
+        const API = "https://venomously-criminative-frank.ngrok-free.dev"; 
+
+        function show(id, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
             el.classList.add('active');
+            if(id === 'p-list') loadNotes();
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        function sendNote() {
-            const cat = document.getElementById('note-category').value;
-            const txt = document.getElementById('note-text').value;
-
-            if (!txt) {
-                tg.MainButton.setText("Напиши хоть что-нибудь!").show();
-                setTimeout(() => tg.MainButton.hide(), 2000);
-                return;
+        async function loadNotes() {
+            try {
+                const res = await fetch(`${API}/notes`);
+                const notes = await res.json();
+                const cont = document.getElementById('list-container');
+                cont.innerHTML = notes.map(n => `
+                    <div class="note">
+                        <span class="del-btn" onclick="deleteNote(${n.id})">Удалить</span>
+                        <span class="cat">${n.category}</span>
+                        <div style="color: #fff; line-height: 1.5;">${n.content}</div>
+                        <span class="time">${n.created_at}</span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Ошибка API");
             }
+        }
 
-            const data = { category: cat, text: txt };
+        async function deleteNote(id) {
+            if(!confirm("Удалить запись?")) return;
+            tg.HapticFeedback.notificationOccurred('warning');
+            await fetch(`${API}/delete/${id}`);
+            loadNotes();
+        }
+
+        function saveNote() {
+            const text = document.getElementById('i-text').value;
+            const cat = document.getElementById('i-cat').value;
+            if(!text) return;
+
+            const data = { category: cat, text: text };
             tg.sendData(JSON.stringify(data));
             
-            // ВАЖНО: Мы больше НЕ закрываем окно! 
-            // Вместо этого очищаем поле и показываем успех
-            document.getElementById('note-text').value = '';
+            document.getElementById('i-text').value = '';
             tg.HapticFeedback.notificationOccurred('success');
-            showPage('page-list', document.querySelector('.nav-item'));
+            show('p-list', document.querySelectorAll('.nav-btn')[0]);
         }
+
+        loadNotes();
     </script>
 </body>
 </html>
