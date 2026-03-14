@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amanat Notes</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Используем переменные темы Telegram */
+        body {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: sans-serif;
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .input-field {
+            background: var(--tg-theme-secondary-bg-color);
+            border: 1px solid var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
+            padding: 12px; border-radius: 10px; font-size: 16px;
+        }
+        button {
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none; padding: 15px; border-radius: 10px;
+            font-weight: bold; cursor: pointer;
+        }
+        select {
+            background: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+            padding: 10px; border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h2>📝 Новая заметка</h2>
+    
+    <label>Категория:</label>
+    <select id="category" class="input-field">
+        <option value="Работа">💼 Работа</option>
+        <option value="Личное">🏠 Личное</option>
+        <option value="Идеи">💡 Идеи</option>
+        <option value="Астрономия">🌌 Астрономия</option>
+    </select>
+
+    <label>Текст заметки:</label>
+    <textarea id="noteText" class="input-field" rows="5" placeholder="Напиши что-нибудь..."></textarea>
+
+    <button id="sendBtn">Сохранить заметку</button>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем на все окно
+
+        let btn = document.getElementById("sendBtn");
+
+        btn.addEventListener("click", () => {
+            let cat = document.getElementById("category").value;
+            let txt = document.getElementById("noteText").value;
+
+            if (txt.length < 2) {
+                tg.showAlert("Заметка слишком короткая!");
+                return;
+            }
+
+            // Формируем данные для отправки боту
+            let data = {
+                category: cat,
+                text: txt
+            };
+
+            // Важный момент: через эту функцию данные улетают в Python
+            tg.sendData(JSON.stringify(data));
+        });
+    </script>
+</body>
+</html>
